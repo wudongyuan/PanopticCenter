@@ -1,0 +1,53 @@
+MODEL:
+  META_ARCHITECTURE: "panoptic_deeplab"
+  BN_MOMENTUM: 0.01
+  BACKBONE:
+    NAME: "resnet50"
+    DILATION: (False, False, False)
+    PRETRAINED: True
+  DECODER:
+    IN_CHANNELS: 2048
+    FEATURE_KEY: "res5"
+    DECODER_CHANNELS: 256
+    ATROUS_RATES: (3, 6, 9)
+  PANOPTIC_DEEPLAB:
+    LOW_LEVEL_CHANNELS: (1024, 512, 256)
+    LOW_LEVEL_KEY: ["res4", "res3", "res2"]
+    LOW_LEVEL_CHANNELS_PROJECT: (128, 64, 32)
+    INSTANCE:
+      ENABLE: True
+      LOW_LEVEL_CHANNELS_PROJECT: (64, 32, 16)
+      DECODER_CHANNELS: 128
+      HEAD_CHANNELS: 32
+      ASPP_CHANNELS: 256
+      NUM_CLASSES: (1, 2)
+      CLASS_KEY: ["center", "offset"]
+DATASET:
+  ROOT: "./datasets/coco"
+  DATASET: "coco_panoptic"
+  NUM_CLASSES: 133
+  TRAIN_SPLIT: 'train2017'
+  TEST_SPLIT: 'val2017'
+  MIN_RESIZE_VALUE: 641
+  MAX_RESIZE_VALUE: 641
+  RESIZE_FACTOR: 32
+  CROP_SIZE: (641, 641)
+  MIRROR: True
+  MIN_SCALE: 0.5  # change this
+  MAX_SCALE: 1.5  # change this
+  SCALE_STEP_SIZE: 0.1
+  MEAN: (0.485, 0.456, 0.406)
+  STD: (0.229, 0.224, 0.225)
+  SEMANTIC_ONLY: False
+  IGNORE_STUFF_IN_OFFSET: True
+  SMALL_INSTANCE_AREA: 4096
+  SMALL_INSTANCE_WEIGHT: 3
+LOSS:
+  SEMANTIC:
+    NAME: "cross_entropy"
+    IGNORE: 255
+TRAIN:
+  IMS_PER_BATCH: 12  # change this
+  MAX_ITER: 600000  # change this
+TEST:
+  CROP_SIZE: (641, 641)
