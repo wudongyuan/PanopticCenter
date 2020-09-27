@@ -26,8 +26,9 @@ MODEL:
       NUM_CLASSES: (1, 2)
       CLASS_KEY: ["center", "offset"]
 DATASET:
-  ROOT: "./datasets/cityscapes"
-  DATASET: "cityscapes_panoptic"
+#  ROOT: "../panoptic-deeplab/datasets/cityscapes"
+  ROOT: "/home/uestcer/Desktop/WDY/Dataset/Brats"
+  DATASET: "brats2015"
   NUM_CLASSES: 19
   TRAIN_SPLIT: 'train'
   TEST_SPLIT: 'val'

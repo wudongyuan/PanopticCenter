@@ -8,7 +8,7 @@ import logging
 import torch
 import numpy as np
 
-from .datasets import Cityscapes, CityscapesPanoptic, COCOPanoptic
+from .datasets import Cityscapes, CityscapesPanoptic, COCOPanoptic, BraTS
 from . import samplers
 from segmentation.utils.comm import get_world_size
 from segmentation.utils.env import seed_all_rng
@@ -27,6 +27,7 @@ def build_dataset_from_cfg(config, is_train=True):
         'cityscapes': Cityscapes,
         'cityscapes_panoptic': CityscapesPanoptic,
         'coco_panoptic': COCOPanoptic,
+        'brats2015': BraTS,
     }
 
     dataset_cfg = {
@@ -77,8 +78,24 @@ def build_dataset_from_cfg(config, is_train=True):
             small_instance_area=config.DATASET.SMALL_INSTANCE_AREA,
             small_instance_weight=config.DATASET.SMALL_INSTANCE_WEIGHT
         ),
+        'brats2015': dict(
+            root=config.DATASET.ROOT,
+            split=config.DATASET.TRAIN_SPLIT if is_train else config.DATASET.TEST_SPLIT,
+            is_train=is_train,
+            crop_size=config.DATASET.CROP_SIZE if is_train else config.TEST.CROP_SIZE,
+            mirror=config.DATASET.MIRROR,
+            min_scale=config.DATASET.MIN_SCALE,
+            max_scale=config.DATASET.MAX_SCALE,
+            scale_step_size=config.DATASET.SCALE_STEP_SIZE,
+            mean=config.DATASET.MEAN,
+            std=config.DATASET.STD,
+            semantic_only=config.DATASET.SEMANTIC_ONLY,
+            ignore_stuff_in_offset=config.DATASET.IGNORE_STUFF_IN_OFFSET,
+            small_instance_area=config.DATASET.SMALL_INSTANCE_AREA,
+            small_instance_weight=config.DATASET.SMALL_INSTANCE_WEIGHT
+        ),
     }
-
+    a = dataset_map[config.DATASET.DATASET]
     dataset = dataset_map[config.DATASET.DATASET](
         **dataset_cfg[config.DATASET.DATASET]
     )
