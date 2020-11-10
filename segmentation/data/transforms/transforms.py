@@ -23,6 +23,8 @@ class Compose(object):
     def __call__(self, image, label):
         for t in self.transforms:
             image, label = t(image, label)
+            # print(image.shape)
+            print(label.shape)
         return image, label
 
     def __repr__(self):

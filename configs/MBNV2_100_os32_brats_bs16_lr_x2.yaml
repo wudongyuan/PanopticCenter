@@ -26,18 +26,18 @@ MODEL:
       NUM_CLASSES: (1, 2)
       CLASS_KEY: ["center", "offset"]
 DATASET:
-  ROOT: "../panoptic-deeplab/datasets/cityscapes"
-  DATASET: "cityscapes_panoptic"
-  NUM_CLASSES: 19
+  ROOT: "/home/uestcer/Desktop/WDY/Dataset/Brats"
+  DATASET: "brats2015"
+  NUM_CLASSES: 5
   TRAIN_SPLIT: 'train'
   TEST_SPLIT: 'val'
-  CROP_SIZE: (1025, 2049)
+  CROP_SIZE: (240, 240)
   MIRROR: True
   MIN_SCALE: 0.5
   MAX_SCALE: 2.0
   SCALE_STEP_SIZE: 0.1
-  MEAN: (0.485, 0.456, 0.406)
-  STD: (0.229, 0.224, 0.225)
+  MEAN: (0.485, 0.456, 0.406, 0.435)
+  STD: (0.229, 0.224, 0.225, 0.226)
   SEMANTIC_ONLY: False
   IGNORE_STUFF_IN_OFFSET: True
   SMALL_INSTANCE_AREA: 4096
@@ -84,3 +84,5 @@ GPUS: (0,)
 WORKERS: 1
 # Logging frequency
 PRINT_FREQ: 200
+DATALOADER:
+  NUM_WORKERS: 4

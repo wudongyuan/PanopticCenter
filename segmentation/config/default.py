@@ -11,7 +11,7 @@ _C.OUTPUT_DIR = ''
 _C.GPUS = (0,)
 _C.WORKERS = 0
 # Logging frequency
-_C.PRINT_FREQ = 200
+_C.PRINT_FREQ = 10
 # Checkpoint frequency
 _C.CKPT_FREQ = 5000
 

@@ -34,16 +34,28 @@ from cityscapesscripts.preparation.json2labelImg import json2labelImg
 # The main method
 def main():
     # Where to look for Cityscapes
+    if 'BraTS_DATASET' in os.environ:
+        bratsPath = os.environ['BraTS_DATASET']
+    else:
+        bratsPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..')
+
     if 'CITYSCAPES_DATASET' in os.environ:
         cityscapesPath = os.environ['CITYSCAPES_DATASET']
     else:
         cityscapesPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..')
     # how to search for all ground truth
     searchFine   = os.path.join(cityscapesPath, "gtFine", "*", "*", "*_gt*_polygons.json")
+    searchCoarse = os.path.join(cityscapesPath, "gtCoarse", "*", "*", "*_gt*_polygons.json")
     # searchCoarse = os.path.join(cityscapesPath, "gtCoarse", "*", "*", "*_gt*_polygons.json")
+    # ot_path = glob.glob(os.path.join(os.path.join(bratsPath, "Training", "*", "*"), "*", "*OT*.mha"))
+    # t1_path = glob.glob(os.path.join(os.path.join(bratsPath, "Training", "*", "*"), "*", "*T1*.mha"))
+    # t1c_path = glob.glob(os.path.join(os.path.join(bratsPath, "Training", "*", "*"), "*", "*T1c*.mha"))
+    # flair_path = glob.glob(os.path.join(os.path.join(bratsPath, "Training", "*", "*"), "*", "*Flair*.mha"))
+    # t2_path = glob.glob(os.path.join(os.path.join(bratsPath, "Training", "*", "*"), "*", "*T2*.mha"))
+
 
     # search files
-    filesFine = glob.glob( searchFine )
+    filesFine = glob.glob(searchFine)
     filesFine.sort()
     # filesCoarse = glob.glob( searchCoarse )
     # filesCoarse.sort()
@@ -64,11 +76,11 @@ def main():
     print("Progress: {:>3} %".format( progress * 100 / len(files) ), end=' ')
     for f in files:
         # create the output filename
-        dst = f.replace( "_polygons.json", "_labelTrainIds.png" )
+        dst = f.replace("_polygons.json", "_labelTrainIds.png")
 
         # do the conversion
         try:
-            json2labelImg( f , dst , "trainIds" )
+            json2labelImg(f, dst, "trainIds")
         except:
             print("Failed to convert: {}".format(f))
             raise
