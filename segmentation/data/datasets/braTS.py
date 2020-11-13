@@ -120,8 +120,8 @@ class BraTS(BaseDataset):
             dPath = r'/media/uestcer/Projects/WDY/datasets/Brats/BRATS2015_slice/'
             for LorH in os.listdir(dPath+'Training'):
                 path = os.path.join(dPath+'Training', LorH)
-                for filename in os.listdir(path):
-                    braPath = os.path.join(path, filename)
+                # for filename in os.listdir(path):
+                #     braPath = os.path.join(path, filename)
                     # self.img_list.append(braPath)
                 self.T1_path.append(glob(path + '/*/*T1.*/*.gz'))
                 self.T1c_path.append(glob(path + '/*/*T1c.*/*.gz'))
@@ -231,7 +231,7 @@ class BraTS(BaseDataset):
 
         # 这个时候:
         # label: shape = (240, 240, 1), dtype = float32
-        # image: shape = (240, 240, 4), dtype = float64
+        # image: shape = (240, 240, 4), dtype = float32
         # print(image[80,:,:])
         # print(image.dtype)
         # 暂时注释掉,输出应该是[240,240,3],但是此处输出为[240,240]
@@ -240,10 +240,9 @@ class BraTS(BaseDataset):
             image, label = self.transform(image, label)
             # 手动增加一维
             label = np.expand_dims(label, -1)
-
         # 这个时候:
         # label: shape = (240, 240), dtype = float32
-        # image: shape = torch.Size([4, 240, 240]), dtype = torch.float64
+        # image: shape = torch.Size([4, 240, 240]), dtype = torch.float32
         # print(image.dtype)
         dataset_dict['image'] = image
         if not self.has_instance:

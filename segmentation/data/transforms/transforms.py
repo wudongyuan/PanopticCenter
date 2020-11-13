@@ -23,8 +23,6 @@ class Compose(object):
     def __call__(self, image, label):
         for t in self.transforms:
             image, label = t(image, label)
-            # print(image.shape)
-            # print(label.shape)
         return image, label
 
     def __repr__(self):
@@ -104,12 +102,8 @@ class RandomScale(object):
         # TODO: use fvcore (https://github.com/facebookresearch/fvcore/blob/master/fvcore/transforms/transform.py#L377)
         image_dtype = image.dtype
         label_dtype = label.dtype
-        # print(label.shape)
-        # print(label.dtype)
         image = cv2.resize(image.astype(np.float), None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_LINEAR)
         label = cv2.resize(label.astype(np.float), None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
-        # print(label.shape)
-        # print(label.dtype)
         return image.astype(image_dtype), label.astype(label_dtype)
 
 

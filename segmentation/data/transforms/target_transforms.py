@@ -66,8 +66,7 @@ class PanopticTargetGenerator(object):
                 - offset_weights: Tensor, ignore region of offset prediction, shape=(H, W), used as weights for offset
                     regression 0 is ignore, 1 is has instance. Multiply this mask to loss.
         """
-        # print(panoptic.shape)
-        # print(panoptic.dtype)
+
         panoptic = self.rgb2id(panoptic)  # float32 (1025, 2049, 3)
         height, width = panoptic.shape[0], panoptic.shape[1]
         semantic = np.zeros_like(panoptic, dtype=np.uint8) + self.ignore_label

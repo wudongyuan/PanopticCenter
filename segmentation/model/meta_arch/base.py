@@ -50,8 +50,6 @@ class BaseSegmentationModel(nn.Module):
 
     def forward(self, x, targets=None):
         input_shape = x.shape[-2:]
-        # x = x.type(torch.FloatTensor)
-        # x.cuda()
         # contract: features is a dict of tensors
         features = self.backbone(x)
         pred = self.decoder(features)

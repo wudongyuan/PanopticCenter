@@ -123,13 +123,14 @@ def main():
     batch_time = AverageMeter()
     loss_meter = AverageMeter()
 
+    # 显示模型的参数量
     def get_parameter_number(net):
         total_num = sum(p.numel() for p in net.parameters())
         trainable_num = sum(p.numel() for p in net.parameters() if p.requires_grad)
         # return {'Total': total_num/1000000, 'Trainable': trainable_num/1000000}
-        logger.info('Total:{}M, Trainable:{}M'.format(total_num/1000000,trainable_num/1000000))
-
+        logger.info('Total:{}M, Trainable:{}M'.format(total_num/1000000, trainable_num/1000000))
     print(get_parameter_number(model))
+
     # Debug output.
     if config.DEBUG.DEBUG:
         debug_out_dir = os.path.join(config.OUTPUT_DIR, 'debug_train')

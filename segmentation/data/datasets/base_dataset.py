@@ -122,10 +122,8 @@ class BaseDataset(data.Dataset):
             dataset_dict['semantic'] = torch.as_tensor(label.astype('long'))
             return dataset_dict
         # 经过数据增广后,这个时候:
-        # print(image)
         # label: shape = (1025, 2049, 3), dtype = float32
         # image: shape = torch.Size([3, 1025, 2049]), dtype = torch.float32
-
         # Generate training target.
         if self.target_transform is not None:
             label_dict = self.target_transform(label, self.ins_list[index])
