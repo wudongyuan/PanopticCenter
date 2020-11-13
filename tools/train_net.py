@@ -6,7 +6,6 @@
 # ------------------------------------------------------------------------------
 
 import argparse
-import glob
 import os
 import pprint
 import logging
@@ -29,7 +28,6 @@ from segmentation.solver import get_lr_group_id
 from segmentation.utils import save_debug_images
 from segmentation.utils import AverageMeter
 from segmentation.utils.utils import get_loss_info_str, to_cuda, get_module
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train segmentation network')
@@ -57,8 +55,8 @@ def main():
     if not logger.isEnabledFor(logging.INFO):  # setup_logger is not called
         setup_logger(output=config.OUTPUT_DIR, distributed_rank=args.local_rank)
 
-    logger.info(pprint.pformat(args))
-    logger.info(config)
+    # logger.info(pprint.pformat(args))
+    # logger.info(config)
 
     # cudnn related setting
     cudnn.benchmark = config.CUDNN.BENCHMARK
@@ -67,7 +65,6 @@ def main():
     gpus = list(config.GPUS)
     distributed = len(gpus) > 1
     device = torch.device('cuda:{}'.format(args.local_rank))
-
     if distributed:
         torch.cuda.set_device(args.local_rank)
         torch.distributed.init_process_group(
@@ -83,7 +80,6 @@ def main():
     if distributed:
         model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
     model = model.to(device)
-
     if comm.get_world_size() > 1:
         model = DistributedDataParallel(
             model, device_ids=[args.local_rank], output_device=args.local_rank
@@ -148,7 +144,6 @@ def main():
             if not distributed:
                 data = to_cuda(data, device)
             data_time.update(time.time() - start_time)
-
             image = data.pop('image')
             out_dict = model(image, data)
             loss = out_dict['loss']

@@ -68,6 +68,6 @@ if __name__ == '__main__':
     import torch
 
     model = stacked_conv(4, 2, 3, 3)
-    print(model)
+    # print(model)
     data = torch.zeros(1, 4, 5, 5)
-    print(model.forward(data).shape)
+    # print(model.forward(data).shape)

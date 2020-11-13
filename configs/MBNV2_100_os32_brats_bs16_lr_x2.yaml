@@ -6,7 +6,7 @@ MODEL:
     META: "mobilenet_v2"
     NAME: "mobilenet_v2"
     DILATION: (False, False, False)
-    PRETRAINED: True
+    PRETRAINED: False
 #    WEIGHTS: "pretrained/panoptic_deeplab_MBNV2_100_os32_cityscapes_bs16_lr_x2.pth"
   DECODER:
     IN_CHANNELS: 320

@@ -54,8 +54,9 @@ def save_debug_images(dataset, batch_images, batch_targets, batch_outputs, out_d
     map_height = batch_images.size(2)
     map_width = batch_images.size(3)
 
+    # 根据医学图像4通道修改
     grid_image = np.zeros(
-        (map_height, batch_size * map_width, 3), dtype=np.uint8
+        (map_height, batch_size * map_width, 4), dtype=np.uint8
     )
 
     num_targets = len(target_keys)
