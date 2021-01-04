@@ -51,6 +51,7 @@ def cutSlice2(path, have_tumor_data):
                     sitk.WriteImage(sitk.Cast(img, sitk.sitkUInt8), name)
 
 
+
 for LorH in os.listdir(Path+'Training'):
     path = os.path.join(Path+'Training', LorH)
     T1_path = glob(path + '/*/*/*T1.*.mha')
@@ -61,9 +62,10 @@ for LorH in os.listdir(Path+'Training'):
 
     with open("/media/uestcer/Projects/WDY/datasets/Brats/BRATS2015_slice/train.txt", "r") as f:  # 打开文件
         data = f.readlines()
-        have_tumor_data= []
+        have_tumor_data = []
         for line in (data):
             have_tumor_data.append(line[0:-2])
+        # 一共19855
         cutSlice2(T1_path, have_tumor_data)
         cutSlice2(T1c_path, have_tumor_data)
         cutSlice2(Flair_path, have_tumor_data)

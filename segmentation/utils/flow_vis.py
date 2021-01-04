@@ -89,18 +89,18 @@ def flow_compute_color(u, v, convert_to_bgr=False):
 
     for i in range(colorwheel.shape[1]):
 
-        tmp = colorwheel[:,i]
+        tmp = colorwheel[:, i]
         col0 = tmp[k0] / 255.0
         col1 = tmp[k1] / 255.0
         col = (1-f)*col0 + f*col1
 
         idx = (rad <= 1)
-        col[idx]  = 1 - rad[idx] * (1-col[idx])
+        col[idx] = 1 - rad[idx] * (1-col[idx])
         col[~idx] = col[~idx] * 0.75   # out of range?
 
         # Note the 2-i => BGR instead of RGB
         ch_idx = 2-i if convert_to_bgr else i
-        flow_image[:,:,ch_idx] = np.floor(255 * col)
+        flow_image[:, :, ch_idx] = np.floor(255 * col)
 
     return flow_image
 
@@ -121,8 +121,8 @@ def flow_to_color(flow_uv, clip_flow=None, convert_to_bgr=False):
     if clip_flow is not None:
         flow_uv = np.clip(flow_uv, 0, clip_flow)
 
-    u = flow_uv[:,:,0]
-    v = flow_uv[:,:,1]
+    u = flow_uv[:, :, 0]
+    v = flow_uv[:, :, 1]
 
     rad = np.sqrt(np.square(u) + np.square(v))
     rad_max = np.max(rad)

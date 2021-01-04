@@ -119,7 +119,8 @@ def build_loss_from_cfg(config):
         A nn.Module loss.
     """
     if config.NAME == 'cross_entropy':
-        # return CrossEntropyLoss(ignore_index=config.IGNORE, reduction='mean')
+        from torch import nn
+        # return CrossEntropyLoss(ignore_index=config.IGNORE, reduction='mean', weight=None)
         return RegularCE(ignore_label=config.IGNORE)
     elif config.NAME == 'ohem':
         return OhemCE(ignore_label=config.IGNORE, threshold=config.THRESHOLD, min_kept=config.MIN_KEPT)

@@ -91,6 +91,7 @@ class BaseDataset(data.Dataset):
         else:
             label = None
         raw_label = label.copy()
+
         if self.raw_label_transform is not None:
             raw_label = self.raw_label_transform(raw_label, self.ins_list[index])['semantic']
         if not self.is_train:

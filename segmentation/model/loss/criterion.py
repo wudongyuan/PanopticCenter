@@ -90,7 +90,7 @@ class DeepLabCE(nn.Module):
             the top k percent pixels (e.g., the top 20% pixels). This is useful for hard pixel mining.
         weight: Tensor, a manual rescaling weight given to each class.
     """
-    def __init__(self, ignore_label=-1, top_k_percent_pixels=1.0, weight=None):
+    def __init__(self, ignore_label=255, top_k_percent_pixels=1.0, weight=None):
         super(DeepLabCE, self).__init__()
         self.top_k_percent_pixels = top_k_percent_pixels
         self.ignore_label = ignore_label
@@ -100,6 +100,8 @@ class DeepLabCE(nn.Module):
 
     def forward(self, logits, labels, **kwargs):
         if 'semantic_weights' in kwargs:
+            print(logits.shape)
+            logits = nn.softmax
             pixel_losses = self.criterion(logits, labels) * kwargs['semantic_weights']
             pixel_losses = pixel_losses.contiguous().view(-1)
         else:

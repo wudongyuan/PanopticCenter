@@ -145,11 +145,24 @@ def main():
             if not distributed:
                 data = to_cuda(data, device)
             data_time.update(time.time() - start_time)
+            # 取出mini-bach的数据和标签
             image = data.pop('image')
+            label = data.pop('label')
+            # import imageio
+            # import numpy as np
+            # print(label.shape)
+            # label_image = np.array(label.cpu()[0])
+            # print(label_image.shape)
+            # imageio.imwrite('%s/%d_%s.png' % ('./', 1, 'debug_batch_label'), label_image.transpose(1, 2, 0))
+            # 向前传播
             out_dict = model(image, data)
+            # 计算代价函数
             loss = out_dict['loss']
+            # 清零梯度准备计算
             optimizer.zero_grad()
+            # 反向传播
             loss.backward()
+            # 更新训练参数
             optimizer.step()
             # Get lr.
             lr = optimizer.param_groups[best_param_group_id]["lr"]
@@ -169,6 +182,7 @@ def main():
                 if comm.is_main_process() and config.DEBUG.DEBUG:
                     save_debug_images(
                         dataset=data_loader.dataset,
+                        label=label,
                         batch_images=image,
                         batch_targets=data,
                         batch_outputs=out_dict,

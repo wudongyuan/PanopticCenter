@@ -23,6 +23,7 @@ class SinglePanopticDeepLabDecoder(nn.Module):
         super(SinglePanopticDeepLabDecoder, self).__init__()
         if aspp_channels is None:
             aspp_channels = decoder_channels
+        # in_channels = 320, out_channels = 256, 将从backbone得到的高维特征送到ASPP进一步处理得到蕴含高低分辨率信息的丰富特征.
         self.aspp = ASPP(in_channels, out_channels=aspp_channels, atrous_rates=atrous_rates)
         self.feature_key = feature_key
         self.decoder_stage = len(low_level_channels)
@@ -63,16 +64,20 @@ class SinglePanopticDeepLabDecoder(nn.Module):
 
     def forward(self, features):
         x = features[self.feature_key]
+
+        # 经过aspp丰富特征
         x = self.aspp(x)
 
         # build decoder
         for i in range(self.decoder_stage):
             l = features[self.low_level_key[i]]
             l = self.project[i](l)
+            # print(l.shape)
             x = F.interpolate(x, size=l.size()[2:], mode='bilinear', align_corners=True)
+            # print(i,x.shape)
             x = torch.cat((x, l), dim=1)
             x = self.fuse[i](x)
-
+        # print(x.shape)
         return x
 
 
@@ -102,7 +107,6 @@ class SinglePanopticDeepLabHead(nn.Module):
         # build classifier
         for key in self.class_key:
             pred[key] = self.classifier[key](x)
-
         return pred
 
 
@@ -111,9 +115,11 @@ class PanopticDeepLabDecoder(nn.Module):
                  decoder_channels, atrous_rates, num_classes, **kwargs):
         super(PanopticDeepLabDecoder, self).__init__()
         # Build semantic decoder
+
         self.semantic_decoder = SinglePanopticDeepLabDecoder(in_channels, feature_key, low_level_channels,
                                                              low_level_key, low_level_channels_project,
                                                              decoder_channels, atrous_rates)
+
         self.semantic_head = SinglePanopticDeepLabHead(decoder_channels, decoder_channels, [num_classes], ['semantic'])
         # Build instance decoder
         self.instance_decoder = None
@@ -145,10 +151,13 @@ class PanopticDeepLabDecoder(nn.Module):
 
     def forward(self, features):
         pred = OrderedDict()
-
+        # print(features)
         # Semantic branch
         semantic = self.semantic_decoder(features)
+        # torch.Size([1, 256, 60, 60])
         semantic = self.semantic_head(semantic)
+        # print(semantic['semantic'].shape)
+        # torch.Size([1, 5, 60, 60])
         for key in semantic.keys():
             pred[key] = semantic[key]
 

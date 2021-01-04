@@ -12,16 +12,18 @@ import numpy as np
 from PIL import Image, ImageOps
 import torch
 import xmltodict
+import matplotlib as mpl
+import matplotlib.cm
 
 from .base_dataset import BaseDataset
 from .utils import DatasetDescriptor
 from ..transforms import build_transforms, PanopticTargetGenerator, SemanticTargetGenerator
 
 _BraTS_INFORMATION = DatasetDescriptor(
-    splits_to_sizes={'train': 19855,
+    splits_to_sizes={'train': 16114,
                      'test': 30},
     num_classes=5,
-    ignore_label=255,
+    ignore_label=0,
 )
 
 # A map from data type to folder name that saves the data.
@@ -52,7 +54,7 @@ _DATA_FORMAT_MAP = {
 # Add 1 void label.
 _BraTS_PANOPTIC_TRAIN_ID_TO_EVAL_ID = [1, 2, 3, 4, 0]
 
-_BraTS_THING_LIST = [255]
+_BraTS_THING_LIST = [1, 2, 3, 4]
 
 
 class BraTS(BaseDataset):
@@ -120,19 +122,24 @@ class BraTS(BaseDataset):
             dPath = r'/media/uestcer/Projects/WDY/datasets/Brats/BRATS2015_slice/'
             for LorH in os.listdir(dPath+'Training'):
                 path = os.path.join(dPath+'Training', LorH)
-                # for filename in os.listdir(path):
-                #     braPath = os.path.join(path, filename)
-                    # self.img_list.append(braPath)
-                self.T1_path.append(glob(path + '/*/*T1.*/*.gz'))
-                self.T1c_path.append(glob(path + '/*/*T1c.*/*.gz'))
-                self.Flair_path.append(glob(path + '/*/*Flair*/*.gz'))
-                self.T2_path.append(glob(path + '/*/*T2*/*.gz'))
-                self.OT_path.append(glob(path + '/*/*OT*/*.gz'))
-            self.T1_path = self.T1_path[0] + self.T1_path[1]
-            self.T1c_path = self.T1c_path[0] + self.T1c_path[1]
-            self.Flair_path = self.Flair_path[0] + self.Flair_path[1]
-            self.T2_path = self.T2_path[0] + self.T2_path[1]
-            self.ann_list = self.OT_path[0] + self.OT_path[1]
+                for filename in os.listdir(path):
+                    braPath = os.path.join(path, filename)
+                    self.T1_path = self.T1_path + sorted(glob(braPath + '/*T1.*/*.gz'), key=lambda name: name[-11:-7])
+                    self.T1c_path = self.T1c_path + sorted(glob(braPath + '/*T1c.*/*.gz'), key=lambda name: name[-11:-7])
+                    self.Flair_path = self.Flair_path + sorted(glob(braPath + '/*Flair.*/*.gz'), key=lambda name: name[-11:-7])
+                    self.T2_path = self.T2_path + sorted(glob(braPath + '/*T2.*/*.gz'), key=lambda name: name[-11:-7])
+                    self.OT_path = self.OT_path + sorted(glob(braPath + '/*OT.*/*.gz'), key=lambda name: name[-11:-7])
+            self.ann_list = self.OT_path
+
+            # 求数据集均值和方差
+            # a = []
+            # for i in self.Flair_path:
+            #     a.append(self.read_image(i))
+            # imgs = np.concatenate(a, axis=-1)
+            # imgs = imgs.astype(np.float32) / 255.
+            # b = np.mean(imgs)
+            # print(b)
+            # print(np.std(imgs))
 
             for label in os.listdir(dPath+'label'):
                 path = os.path.join(dPath+'label', label)
@@ -143,7 +150,7 @@ class BraTS(BaseDataset):
                     # root = dom.documentElement
                     # annotation = root.getElementsByTagName('image')
                     for i in annotation['annotation']['image']:
-                        if i['segmented'] is not '0':
+                        if i['segmented'] is '1':
                             bndboxs = i['bndbox']
                             bbox_list = []
                             if isinstance(bndboxs, list):
@@ -176,6 +183,7 @@ class BraTS(BaseDataset):
 
         assert len(self) == _BraTS_INFORMATION.splits_to_sizes[self.split]
         self.transform = build_transforms(self, is_train)
+        # self.transform = None
         if semantic_only:
             self.target_transform = SemanticTargetGenerator(self.ignore_label, self.rgb2id)
         else:
@@ -192,6 +200,7 @@ class BraTS(BaseDataset):
         return _BraTS_PANOPTIC_TRAIN_ID_TO_EVAL_ID
 
     def __getitem__(self, index):
+        # 获得index号的数据和标签
         # TODO: handle transform properly when there is no label
         dataset_dict = {}
         assert os.path.exists(self.ann_list[index]), 'Path does not exist: {}'.format(self.img_list[index])
@@ -199,7 +208,7 @@ class BraTS(BaseDataset):
         arr_t1c = self.read_image(self.T1c_path[index], self.label_dtype)
         arr_flair = self.read_image(self.Flair_path[index], self.label_dtype)
         arr_t2 = self.read_image(self.T2_path[index], self.label_dtype)
-        image = np.concatenate((arr_flair, arr_t1, arr_t1c, arr_t2), axis=-1)
+        image = np.concatenate((arr_flair, arr_t1, arr_t1c), axis=-1)
         if not self.is_train:
             # Do not save this during training.
             dataset_dict['raw_image'] = image.copy()
@@ -209,11 +218,12 @@ class BraTS(BaseDataset):
         else:
             label = None
         raw_label = label.copy()
+
         if self.raw_label_transform is not None:
             raw_label = self.raw_label_transform(raw_label, self.ins_list[index])['semantic']
-        if not self.is_train:
-            # Do not save this during training
-            dataset_dict['raw_label'] = raw_label
+
+        # if not self.is_train:
+        #     # Do not save this during training
         size = image.shape
         dataset_dict['raw_size'] = np.array(size)
         # To save prediction for official evaluation.
@@ -235,27 +245,34 @@ class BraTS(BaseDataset):
         # print(image[80,:,:])
         # print(image.dtype)
         # 暂时注释掉,输出应该是[240,240,3],但是此处输出为[240,240]
+
         # Apply data augmentation.
         if self.transform is not None:
             image, label = self.transform(image, label)
             # 手动增加一维
-            label = np.expand_dims(label, -1)
+            # label = np.expand_dims(label, -1)
+        # print(label.shape)
+        # label = label.transpose(1, 2, 0)
+        # import imageio
+        # label_image = np.array(label)
+        # imageio.imwrite('%s/%d_%s.png' % ('./', 1, 'debug_batch_label'), label_image)
+
         # 这个时候:
-        # label: shape = (240, 240), dtype = float32
+        # label: shape = (240, 240, 1), dtype = float32
         # image: shape = torch.Size([4, 240, 240]), dtype = torch.float32
-        # print(image.dtype)
         dataset_dict['image'] = image
+        dataset_dict['label'] = label.transpose(2, 0, 1)
+        # print(dataset_dict['label'].shape)
+
         if not self.has_instance:
             dataset_dict['semantic'] = torch.as_tensor(label.astype('long'))
             return dataset_dict
 
         # Generate training target.
         if self.target_transform is not None:
-            # print(label.shape)
             label_dict = self.target_transform(label, self.ins_list[index])
             for key in label_dict.keys():
                 dataset_dict[key] = label_dict[key]
-
         return dataset_dict
 
     # import torchsnooper
@@ -278,18 +295,26 @@ class BraTS(BaseDataset):
         return int(color[0] + 256 * color[0] + 256 * 256 * color[0])
 
     def __len__(self):
-        return len(self.ann_list)
+        # 获得数据量
+        return len(self.ins_list)
+
+    # @staticmethod
+    # def read_image(file_name, format=None):
+    #     mha = sitk.ReadImage(file_name)
+    #     image = sitk.GetArrayFromImage(mha)
+    #     mask = image > 0
+    #     temp_img = image[image > 0]
+    #     img_array = (image - temp_img.mean()) / temp_img.std() * mask
+    #     img_array = np.expand_dims(img_array, -1)
+    #     # img_array = np.asarray(img_array)
+    #     return img_array.astype(format)
 
     @staticmethod
     def read_image(file_name, format=None):
         mha = sitk.ReadImage(file_name)
         image = sitk.GetArrayFromImage(mha)
-        mask = image > 0
-        temp_img = image[image > 0]
-        img_array = (image - temp_img.mean()) / temp_img.std() * mask
-        img_array = np.expand_dims(img_array, -1)
-        # img_array = np.asarray(img_array)
-        return img_array.astype(format)
+        image = np.expand_dims(image, -1)
+        return image
 
     @staticmethod
     def read_label(file_name, dtype='uint8'):
@@ -330,23 +355,30 @@ class BraTS(BaseDataset):
             A colormap for visualizing segmentation results.
         """
         colormap = np.zeros((256, 3), dtype=np.uint8)
-        colormap[0] = [128, 64, 128]
-        colormap[1] = [244, 35, 232]
-        colormap[2] = [70, 70, 70]
-        colormap[3] = [102, 102, 156]
-        colormap[4] = [190, 153, 153]
-        colormap[5] = [153, 153, 153]
-        colormap[6] = [250, 170, 30]
-        colormap[7] = [220, 220, 0]
-        colormap[8] = [107, 142, 35]
-        colormap[9] = [152, 251, 152]
-        colormap[10] = [70, 130, 180]
-        colormap[11] = [220, 20, 60]
-        colormap[12] = [255, 0, 0]
-        colormap[13] = [0, 0, 142]
-        colormap[14] = [0, 0, 70]
-        colormap[15] = [0, 60, 100]
-        colormap[16] = [0, 80, 100]
-        colormap[17] = [0, 0, 230]
-        colormap[18] = [119, 11, 32]
+        colormap[0] = [170, 170, 170]
+        colormap[1] = [100, 100, 100]
+        colormap[2] = [251, 114, 153]
+        colormap[3] = [250, 90, 87]
+        colormap[4] = [255, 167, 38]
+        colormap[5] = [0, 161, 214]
+        # colormap[6] = [250, 170, 30]
+        # colormap[7] = [220, 220, 0]
+        # colormap[8] = [107, 142, 35]
+        # colormap[9] = [152, 251, 152]
+        # colormap[10] = [70, 130, 180]
+        # colormap[11] = [220, 20, 60]
+        # colormap[12] = [255, 0, 0]
+        # colormap[13] = [0, 0, 142]
+        # colormap[14] = [0, 0, 70]
+        # colormap[15] = [0, 60, 100]
+        # colormap[16] = [0, 80, 100]
+        # colormap[17] = [0, 0, 230]
+        # colormap[18] = [119, 11, 32]
         return colormap
+
+    @staticmethod
+    def color_image(image, num_classes=5):
+        norm = mpl.colors.Normalize(vmin=0., vmax=num_classes)
+        # mycm = mpl.cm.get_cmap('Set1')
+        mycm = mpl.cm.get_cmap('GnBu')
+        return mycm(norm(image))

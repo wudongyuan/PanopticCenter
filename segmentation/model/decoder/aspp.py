@@ -73,4 +73,6 @@ class ASPP(nn.Module):
         for conv in self.convs:
             res.append(conv(x))
         res = torch.cat(res, dim=1)
-        return self.project(res)
+        # print(res.shape)
+        output = self.project(res)
+        return output

@@ -14,7 +14,7 @@ from .save_annotation import label_to_color_image
 from .flow_vis import flow_compute_color
 
 
-def save_debug_images(dataset, batch_images, batch_targets, batch_outputs, out_dir=None, iteration=0,
+def save_debug_images(dataset, label, batch_images, batch_targets, batch_outputs, out_dir=None, iteration=0,
                       target_keys=('semantic', 'center', 'offset', 'center_weights', 'offset_weights'),
                       output_keys=('semantic', 'center', 'offset'),
                       iteration_to_remove=-1, is_train=True):
@@ -56,7 +56,7 @@ def save_debug_images(dataset, batch_images, batch_targets, batch_outputs, out_d
 
     # 根据医学图像4通道修改
     grid_image = np.zeros(
-        (map_height, batch_size * map_width, 4), dtype=np.uint8
+        (map_height, batch_size * map_width, 3), dtype=np.uint8
     )
 
     num_targets = len(target_keys)
@@ -70,6 +70,8 @@ def save_debug_images(dataset, batch_images, batch_targets, batch_outputs, out_d
     )
 
     semantic_pred = torch.argmax(batch_outputs['semantic'].detach(), dim=1)
+    label_image = label
+
     if 'foreground' in batch_outputs:
         foreground_pred = torch.argmax(batch_outputs['foreground'].detach(), dim=1)
     else:
@@ -160,24 +162,33 @@ def save_debug_images(dataset, batch_images, batch_targets, batch_outputs, out_d
     if out_dir is not None:
         if is_train:
             pil_image = img.fromarray(grid_image.astype(dtype=np.uint8))
-            with open('%s/%s_%d.png' % (out_dir, 'debug_batch_images', iteration), mode='wb') as f:
+            with open('%s/%d_%s.png' % (out_dir, iteration, 'debug_batch_images'), mode='wb') as f:
+                pil_image = pil_image.convert("L")
                 pil_image.save(f, 'PNG')
             pil_image = img.fromarray(grid_target.astype(dtype=np.uint8))
-            with open('%s/%s_%d.png' % (out_dir, 'debug_batch_targets', iteration), mode='wb') as f:
+            with open('%s/%d_%s.png' % (out_dir, iteration, 'debug_batch_targets'), mode='wb') as f:
+                # pil_image = pil_image.convert("L")
                 pil_image.save(f, 'PNG')
             pil_image = img.fromarray(grid_output.astype(dtype=np.uint8))
-            with open('%s/%s_%d.png' % (out_dir, 'debug_batch_outputs', iteration), mode='wb') as f:
+            with open('%s/%d_%s.png' % (out_dir, iteration, 'debug_batch_outputs'), mode='wb') as f:
+                # pil_image = pil_image.convert("L")
                 pil_image.save(f, 'PNG')
+            # label_image = np.array(label_image.cpu().permute(1, 2, 0))
+            label_image = np.array(label_image.cpu()[0])
+            # print(label_image > 0)
+            # print(label_image.shape)
+            import imageio
+            imageio.imwrite('%s/%d_%s.png' % (out_dir, iteration, 'debug_batch_label'), label_image.transpose(1, 2, 0))
         else:
             pil_image = img.fromarray(grid_image.astype(dtype=np.uint8))
-            with open('%s/%s_%d.png' % (out_dir, 'debug_test_images', iteration), mode='wb') as f:
+            with open('%s/%d_%s.png' % (out_dir, iteration, 'debug_test_images'), mode='wb') as f:
                 pil_image.save(f, 'PNG')
             if grid_target.size:
                 pil_image = img.fromarray(grid_target.astype(dtype=np.uint8))
-                with open('%s/%s_%d.png' % (out_dir, 'debug_test_targets', iteration), mode='wb') as f:
+                with open('%s/%d_%s.png' % (out_dir, iteration, 'debug_test_targets'), mode='wb') as f:
                     pil_image.save(f, 'PNG')
             pil_image = img.fromarray(grid_output.astype(dtype=np.uint8))
-            with open('%s/%s_%d.png' % (out_dir, 'debug_test_outputs', iteration), mode='wb') as f:
+            with open('%s/%d_%s.png' % (out_dir, iteration, 'debug_test_outputs'), mode='wb') as f:
                 pil_image.save(f, 'PNG')
 
     if is_train:

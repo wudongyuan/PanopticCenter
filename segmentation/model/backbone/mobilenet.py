@@ -5,7 +5,7 @@
 
 from torch import nn
 from torchvision.models.utils import load_state_dict_from_url
-
+import logging
 
 __all__ = ['MobileNetV2', 'mobilenet_v2']
 
@@ -137,7 +137,7 @@ class MobileNetV2(nn.Module):
         input_channel = _make_divisible(input_channel * width_mult, round_nearest)
         self.last_channel = _make_divisible(last_channel * max(1.0, width_mult), round_nearest)
         # 根据医学图像4通道修改
-        features = [ConvBNReLU(4, input_channel, stride=2)]
+        features = [ConvBNReLU(3, input_channel, stride=2)]
         # building inverted residual blocks
         for t, c, n, s in inverted_residual_setting:
             output_channel = _make_divisible(c * width_mult, round_nearest)
@@ -171,6 +171,7 @@ class MobileNetV2(nn.Module):
 
     def _forward_impl(self, x):
         outputs = {}
+
         # This exists since TorchScript doesn't support inheritance, so the superclass method
         # (this one) needs to have a name other than `forward` that can be accessed in a subclass
         # x = self.features(x)
@@ -200,15 +201,17 @@ def mobilenet_v2(pretrained=False, progress=True, **kwargs):
         state_dict = load_state_dict_from_url(model_urls['mobilenet_v2'],
                                               progress=progress)
         model.load_state_dict(state_dict, strict=False)
+        print('loading pretrained backbone model')
     return model
 
 
 if __name__ == '__main__':
     import torch
 
-    model = mobilenet_v2(pretrained=False)
+    model = mobilenet_v2(pretrained=True)
     print(model)
-    data = torch.zeros(1, 3, 224, 224)
+    data = torch.zeros(1, 3, 240, 240)
+
     results = model.forward(data)
 
     for key in results.keys():

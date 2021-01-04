@@ -66,7 +66,7 @@ class PanopticTargetGenerator(object):
                 - offset_weights: Tensor, ignore region of offset prediction, shape=(H, W), used as weights for offset
                     regression 0 is ignore, 1 is has instance. Multiply this mask to loss.
         """
-
+        # print(panoptic.shape)
         panoptic = self.rgb2id(panoptic)  # float32 (1025, 2049, 3)
         height, width = panoptic.shape[0], panoptic.shape[1]
         semantic = np.zeros_like(panoptic, dtype=np.uint8) + self.ignore_label
@@ -197,6 +197,7 @@ class SemanticTargetGenerator(object):
             # print(seg)
             cat_id = seg["category_id"]
             semantic[panoptic == seg["id"]] = cat_id
+
         return dict(
             semantic=torch.as_tensor(semantic.astype('long'))  # torch.Size([1024, 2048])
         )

@@ -33,18 +33,18 @@ def build_transforms(dataset, is_train=True):
 
     transforms = T.Compose(
         [
-            T.RandomScale(
-                min_scale,
-                max_scale,
-                scale_step_size
-            ),
-            T.RandomCrop(
-                crop_h,
-                crop_w,
-                pad_value,
-                ignore_label,
-                random_pad=is_train
-            ),
+            # T.RandomScale(
+            #     min_scale,
+            #     max_scale,
+            #     scale_step_size
+            # ),
+            # T.RandomCrop(
+            #     crop_h,
+            #     crop_w,
+            #     pad_value,
+            #     ignore_label,
+            #     random_pad=is_train
+            # ),
             T.RandomHorizontalFlip(flip_prob),
             T.ToTensor(),
             T.Normalize(

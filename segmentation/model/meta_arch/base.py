@@ -54,7 +54,7 @@ class BaseSegmentationModel(nn.Module):
         features = self.backbone(x)
         pred = self.decoder(features)
         results = self._upsample_predictions(pred, input_shape)
-
+        # print(results.shape)
         if targets is None:
             return results
         else:

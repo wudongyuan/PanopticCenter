@@ -85,7 +85,10 @@ class PanopticDeepLab(BaseSegmentationModel):
             """
         # Override upsample method to correctly handle `offset`
         result = OrderedDict()
+
+        # key: semantic center offset
         for key in pred.keys():
+            # print(pred[key].shape)
             out = F.interpolate(pred[key], size=input_shape, mode='bilinear', align_corners=True)
             if 'offset' in key:
                 scale = (input_shape[0] - 1) // (pred[key].shape[2] - 1)
@@ -98,6 +101,12 @@ class PanopticDeepLab(BaseSegmentationModel):
         loss = 0
         if targets is not None:
             if 'semantic_weights' in targets.keys():
+                # import imageio
+                # import numpy as np
+                # # print(targets['semantic'].shape)
+                # label_image = np.array(targets['semantic'].cpu())
+                # # print(label_image.shape)
+                # imageio.imwrite('%s/%d_%s.png' % ('./', 1, 'debug_batch_label'), label_image.transpose(1, 2, 0))
                 semantic_loss = self.semantic_loss(
                     results['semantic'], targets['semantic'], semantic_weights=targets['semantic_weights']
                 ) * self.semantic_loss_weight
